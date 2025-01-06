@@ -1,0 +1,199 @@
+---
+title: "Final Report for the imv4sem package"
+author: "Lijin Zhang"
+format: 
+  html:
+    toc: true
+    toc-depth: 2
+vignette: >
+  %\VignetteIndexEntry{Final Report for the imv4sem package}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+```{r setup, include=FALSE}
+devtools::load_all(".")
+```
+
+
+# Introduction
+
+Structural Equation Modeling (SEM) is a cornerstone of social science research, offering powerful tools for understanding relationships between observed and latent variables (Tarka, 2018). Traditional model comparison metrics, such as the $\Delta \chi^2$ statistic, information criteria (AIC, BIC), and fit indices (CFI, RMSEA), have facilitated widespread adoption of SEM. However, these approaches often fall short in providing actionable insights into model improvement or addressing overfitting tendencies. They predominantly yield binary (yes/no) conclusions about model fit, neglect item-level diagnostics, and fail to prioritize generalizability to new data. Consequently, the research community faces challenges in developing robust and interpretable SEM models.
+
+In logistic regression anaysis, Domingue et al. (2021) proposed InterModel Vigorish (IMV), a novel metric for quantifying changes in predictive performance between competing models. Unlike traditional methods, IMV emphasizes prediction over explanation, penalizes overfitting, and offers interpretable measures of model improvement. Building on this foundation, Zhang et al. (2023) extended IMV into the SEM framework, specifically for Confirmatory Factor Analysis (CFA) with binary outcomes. This extension demonstrated IMV’s potential to identify model misspecifications, compare baseline and enhanced models, and provide item-level insights through simulations and empirical applications.
+
+Despite its promise, the adoption of IMV in applied research has been limited by the lack of accessible, user-friendly computational tools. While the `imv` package provides functionality for logistic regression, it cannot be directly extended to support SEM, limiting its applicability in this domain. To bridge this gap, we developed the `imv4sem` package to facilitate the practical implementation of IMV within the SEM framework. This package enables researchers to compute IMV values for comparing models, assess both scale- and item-level performance, and visualize results through intuitive plots. With its comprehensive functionality, `imv4sem` facilitates rigorous evaluation of SEM models, supporting advancements in both theoretical development and applied research. 
+
+For a comprehensive overview of the theoretical foundations and simulation studies validating the effectiveness of IMV in SEM, readers should refer to Zhang et al. (2023). In this work, we focus on detailing the structure of the `imv4sem` package and its practical application for computing IMV to facilitate model comparison in SEM.
+
+
+ 
+
+
+---
+
+# Structure of the Package 
+
+In SEM model fitting, two aspects are commonly evaluated: how the proposed model performs compared to a baseline model where all items are uncorrelated, and how to choose between two competing model structures. The `imv4sem` package addresses both these needs through its primary function, `imvsem()`, which serves two key purposes:
+
+1. **Comparing Competing Model Structures**: The function is designed to compare two competing model structures to identify the model that best fits the data and enhances predictive accuracy. This feature allows researchers to evaluate how different model specifications influence both predictive performance and interpretability, making it an essential tool for informed model selection in SEM.
+
+2. **Baseline Model Comparison**: If the `model2` parameter is `NULL` or unspecified, it compares a proposed model to a baseline model assuming zero item correlation. This helps assess whether specific relationships improve performance, ensuring the model captures meaningful patterns over noise or overfitting.
+
+
+The IMV calculation involves several key steps. To streamline the process of calculating IMV, the package also includes some supporting functions:
+
+1. **Data Splitting for Cross-Validation**: The data is divided into training and testing sets for $k$-fold cross-validation. The `fold()` function facilitates this process, allowing users to specify the desired number of folds ($k$). When $k$ is set to 1, IMV values are computed using in-sample predictions rather than out-of-sample predictions.
+
+2. **SEM Analysis**: Structural Equation Modeling (SEM) analysis is conducted on the training dataset using the `cfa()` function, which is imported from the `lavaan` package. This step estimates the parameters of the defined model.
+
+3. **Response Probability Prediction**: Using the parameter estimates obtained from the training dataset, the model predicts responses in the test dataset. The `predict_sem()` function calculates out-of-sample predicted probabilities, while the `predict_insample()` function is used to compute in-sample predicted probabilities.
+
+4. **IMV Calculation**: The predicted probabilities are then transformed into IMV values using the `imv.binary()` function, which is imported from the `imv` package. This final step quantifies the improvement in predictive accuracy, enabling researchers to compare models effectively.
+
+These steps ensure a systematic and efficient workflow for implementing IMV within the SEM framework, seamlessly integrating robust statistical analysis with practical functionality. 
+
+After obtaining the IMV results, the package offers additional tools to visualize and summarize these findings effectively. The `plot4imv()` function generates clear and intuitive visualizations, allowing researchers to explore patterns and differences in model performance visually. Complementing this, the `summary.imvsem()` function aggregates IMV values across both scale and item levels, providing a comprehensive summary of the results. Together, these tools facilitate efficient diagnosis of model performance, offering insights into the nuances of item-level and scale-level behavior. By combining quantitative metrics with user-friendly visualizations, the package supports a deeper understanding and refinement of SEM models.
+
+---
+
+# Example Workflow
+
+Here, we present an example to demonstrate how to utilize the features and functionalities of the `imv4sem` package effectively. This example will guide users through the process of setting up the analysis, performing key calculations, and interpreting the results, highlighting the practical applications of the package in SEM research.
+
+## Package and Dataset Preparation
+
+The package includes an empirical dataset designed to measure the Behavior Problem Index (BPI), which consists of 28 items. Over time, several competing model structures have been proposed for the BPI scale. In this example, we will demonstrate how to use the `imv4sem` package to evaluate a 6-factor model structure by comparing it to a baseline model with zero item correlations and a competing 5-factor model structure.
+
+```r
+devtools::install_github("stanford-stats290-fa24/team-04-group-project")
+```
+
+
+```{r}
+data_path <- system.file("extdata", "BPI.dat", package = "imv4sem")
+data <- read.table(data_path, header = TRUE)
+# Define the variables to be analyzed
+vary <- colnames(data)
+```
+
+## Baseline IMV Calculation
+
+### Defining Models
+
+Next, we define the SEM models using `lavaan` syntax so we can conduct SEM analysis using `lavaan` package. The 6-factor Model should be:
+
+```{r}
+model_6f <- '
+AnxDep =~ NA*ad1 + ad2 + ad3 + ad4 + ad5
+Headstr =~ NA*hs1 + hs2 + hs3 + hs4 + hs5
+Antisoc =~ NA*as1 + as2 + as3 + as4 + as5 + as6
+Hyperac =~ NA*hy1 + hy2 + hy3 + hy4 + hy5
+PeerProb =~ NA*pp1 + pp2 + pp3
+Depend =~ NA*de1 + de2 + de3 + de4
+AnxDep ~~ 1*AnxDep
+Headstr ~~ 1*Headstr
+Antisoc ~~ 1*Antisoc
+Hyperac ~~ 1*Hyperac
+PeerProb ~~ 1*PeerProb
+Depend ~~ 1*Depend
+'
+```
+
+### IMV Calculation
+
+To calculate the baseline IMV for `model_6f`, we use the `imvsem` function 5-fold. 
+
+```{r}
+library(imv4sem)
+
+imv6f_base <- imvsem(model1 = model_6f, 
+  vary = vary, data = data, nfold = 5)
+```
+
+-   **`model1`**:  This parameter specifies the model to be evaluated. In this example, `model_6f` represents the 6-factor model structure for the Behavior Problem Index (BPI). Since `model2` is not specified, the function defaults to comparing the specified model (`model_6f`) against the baseline model, which assumes zero correlation among items.
+
+-   **`vary`**: This parameter defines the observed variables in the dataset that are used in the SEM analysis. It should include the names of the columns representing the items or indicators in the model. 
+
+-   **`data`**:  This parameter provides the dataset containing the observed variables and any covariates needed for the analysis. The dataset should be structured such that it matches the model's expectations.
+
+-   **`nfold`**:  This parameter sets the number of folds for cross-validation. Here, `nfold = 5` means the data will be split into five folds for cross-validation, enabling out-of-sample evaluation of the model's predictive accuracy. If `nfold` were set to 1, the function would compute IMV using in-sample predictions instead.
+
+
+###  Visualization 
+
+```{r}
+plot4imv(imv6f_base)
+```
+
+Here we plot the IMV values for all items and noted the scale-level IMV. The thresholds for scale-level IMV (0.001) and item-level IMV (0.01) were derived from Zhang et al. (2023). A scale-level IMV value exceeding 0.001 indicates missing parameters in the competing model, suggesting that the proposed model provides better predictions across all items. Similarly, an item-level IMV greater than 0.01 indicates superior predictive performance for a specific item. 
+
+In this analysis, the results demonstrate that compared to the baseline model, which ignores item correlations, the 6-factor model significantly improves predictive accuracy. The scale-level IMV value of 0.179 suggests that researchers could achieve an expected gain of 0.179 per unit of effort (e.g., one dollar) invested in predicting these items by incorporating the item correlations through the 6-factor structure. This high return rate indicates that the 6-factor model is highly effective for capturing the data structure.
+
+### Summarizing Results
+
+We further summarized the scale-level and item-level IMV values as follows:
+
+```{r}
+imv_summary <- summary.imvsem(imv6f_base)
+print(imv_summary)
+```
+
+
+## IMV for Two Competing Models
+
+### Define the 5-factor Model Structure
+
+```{r}
+model_5f <- '
+AnxDep =~ NA*ad1 + ad2 + ad3 + ad4 + ad5
+Headstr =~ NA*hs1 + hs2 + hs3 + hs4 + hs5
+Antisoc =~ NA*as1 + as2 + as3 + as4 + as5 + as6
+Hyperac =~ NA*hy1 + hy2 + hy3 + hy4 + hy5
+PeerProb =~ NA*pp1 + pp2 + pp3 + de1 + de2 + de3 + de4
+AnxDep ~~ 1*AnxDep
+Headstr ~~ 1*Headstr
+Antisoc ~~ 1*Antisoc
+Hyperac ~~ 1*Hyperac
+PeerProb ~~ 1*PeerProb
+'
+```
+
+### IMV Calculation
+
+We can compare `model_5f` and `model_6f` using 5-fold cross-validation. 
+
+```{r}
+imv56f <- imvsem(model1 = model_5f, model2 = model_6f, 
+  vary = vary, data = data, nfold = 5)
+```
+
+-   **`model1`**:  This parameter specifies the first model to be evaluated, in this case, the 5-factor model (`model_5f`). It represents one of the competing structures for the Behavior Problem Index (BPI) that will be compared against another model.
+
+-   **`model2`**:  This parameter specifies the second model to compare against `model1`. Here, `model_6f` is the 6-factor model structure. The comparison evaluates how the 6-factor model improves model fitting and predictive accuracy relative to the 5-factor model. This helps determine whether the additional factor in `model_6f` contributes meaningful enhancements to the model's performance.
+
+
+### Visualizing and Summarizing Results
+```{r}
+plot4imv(imv56f)
+imv_summary <- summary.imvsem(imv56f)
+print(imv_summary)
+```
+
+The results indicate that the 6-factor model outperforms the 5-factor model in predicting data from this scale, as evidenced by a scale-level IMV value of 0.005. This improvement is particularly pronounced in predicting responses for the items `de1`-`de4` and `pp1`-`pp2`, suggesting that the additional factor in the 6-factor model better captures the underlying relationships within these items.
+
+---
+
+# Conclusion
+
+The `imv4sem` package provides a comprehensive framework for evaluating and comparing SEM models using the InterModel Vigorish. Its integration with `lavaan` and visualization capabilities makes it a powerful tool for researchers and practitioners working with SEM.
+
+---
+
+# References
+
+-   Tarka, P. (2018) An overview of structural equation modeling: its beginnings, historical development, usefulness and controversies in the social sciences. Qual Quant 52, 313–354. https://doi.org/10.1007/s11135-017-0469-8
+
+-   Zhang, L., Kanopka, K., … & Domingue, B. (2023). The InterModel Vigorish for Model Comparison in Confirmatory Factor Analysis with Binary Outcomes. https://doi.org/10.31234/osf.io/tv9bd
+
+-   Domingue, B., Rahal, C., … Tripathi, A. (2021). The InterModel Vigorish  (IMV) as a flexible and portable approach for quantifying predictive accuracy with binary outcomes. https://doi.org/10.31235/osf.io/gu3ap
+
