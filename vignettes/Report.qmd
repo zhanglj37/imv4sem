@@ -65,7 +65,7 @@ Here, we present an example to demonstrate how to utilize the features and funct
 The package includes an empirical dataset designed to measure the Behavior Problem Index (BPI), which consists of 28 items. Over time, several competing model structures have been proposed for the BPI scale. In this example, we will demonstrate how to use the `imv4sem` package to evaluate a 6-factor model structure by comparing it to a baseline model with zero item correlations and a competing 5-factor model structure.
 
 ```r
-devtools::install_github("stanford-stats290-fa24/team-04-group-project")
+devtools::install_github("zhanglj37/imv4sem")
 ```
 
 
