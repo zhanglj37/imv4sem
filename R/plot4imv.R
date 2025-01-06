@@ -4,8 +4,6 @@
 #' for the item-level IMVs. The scale-level IMV is included as a note in the plot.
 #'
 #' @param imvres Matrix or vector. Output from the `imvsem` or `imv_baseline` function.
-#' @param threshold_item Numeric. Threshold for item-level IMVs (default = 0.01).
-#' @param threshold_all Numeric. Threshold for overall IMV (default = 0.001).
 #' @return A ggplot object showing the item-level IMV bar chart with thresholds.
 #'
 #' @examples
@@ -15,7 +13,7 @@
 #'
 #' @import ggplot2
 #' @export
-plot4imv <- function(imvres, threshold_item = 0.01, threshold_all = 0.001) {
+plot4imv <- function(imvres) {
 
   imvres_df <- as.data.frame(imvres)
   colnames(imvres_df)[ncol(imvres_df)] <- "fold" # Rename the last column as "fold"
@@ -30,18 +28,14 @@ plot4imv <- function(imvres, threshold_item = 0.01, threshold_all = 0.001) {
 
   # Extract scale-level IMV value for the note
   scale_imv_value <- round(scale_level$IMV, 3)
-  scale_note <- paste0("Scale-Level IMV = ", scale_imv_value,
-                       ifelse(scale_imv_value > threshold_all,
-                              ", larger than the threshold ",
-                              ", within the threshold "),
-                       threshold_all)
+  scale_note <- paste0("Scale-Level IMV = ", scale_imv_value)
 
   # Create bar chart for item-level IMVs
   p_item <- ggplot(item_level, aes(x = .data$Variable, y = .data$IMV)) +
     geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
-    geom_hline(yintercept = threshold_item, linetype = "dashed", color = "red") +
-    annotate("text", x = 1, y = threshold_item + 0.005,
-             label = paste("Threshold =", threshold_item), color = "red", hjust = 0) +
+  #  geom_hline(yintercept = threshold_item, linetype = "dashed", color = "red") +
+  #  annotate("text", x = 1, y = threshold_item + 0.005,
+  #           label = paste("Threshold =", threshold_item), color = "red", hjust = 0) +
     labs(title = "Average Item-Level IMV with Threshold",
          subtitle = scale_note,
          x = "Item",

@@ -125,9 +125,7 @@ imv6f_base <- imvsem(model1 = model_6f,
 plot4imv(imv6f_base)
 ```
 
-Here we plot the IMV values for all items and noted the scale-level IMV. The thresholds for scale-level IMV (0.001) and item-level IMV (0.01) were derived from Zhang et al. (2023). A scale-level IMV value exceeding 0.001 indicates missing parameters in the competing model, suggesting that the proposed model provides better predictions across all items. Similarly, an item-level IMV greater than 0.01 indicates superior predictive performance for a specific item. 
-
-In this analysis, the results demonstrate that compared to the baseline model, which ignores item correlations, the 6-factor model significantly improves predictive accuracy. The scale-level IMV value of 0.179 suggests that researchers could achieve an expected gain of 0.179 per unit of effort (e.g., one dollar) invested in predicting these items by incorporating the item correlations through the 6-factor structure. This high return rate indicates that the 6-factor model is highly effective for capturing the data structure.
+Here we plot the IMV values for all items and noted the scale-level IMV. In this analysis, the results demonstrate that compared to the baseline model, which ignores item correlations, the 6-factor model significantly improves predictive accuracy. The scale-level IMV value of 0.179 suggests that researchers could achieve an expected gain of 0.179 per unit of effort (e.g., one dollar) invested in predicting these items by incorporating the item correlations through the 6-factor structure. This high return rate indicates that the 6-factor model is effective for capturing the data structure.
 
 ### Summarizing Results
 

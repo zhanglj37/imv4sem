@@ -4,14 +4,10 @@
 \alias{plot4imv}
 \title{Plot Item-Level IMV with Thresholds and Scale-Level Note}
 \usage{
-plot4imv(imvres, threshold_item = 0.01, threshold_all = 0.001)
+plot4imv(imvres)
 }
 \arguments{
 \item{imvres}{Matrix or vector. Output from the `imvsem` or `imv_baseline` function.}
-
-\item{threshold_item}{Numeric. Threshold for item-level IMVs (default = 0.01).}
-
-\item{threshold_all}{Numeric. Threshold for overall IMV (default = 0.001).}
 }
 \value{
 A ggplot object showing the item-level IMV bar chart with thresholds.
