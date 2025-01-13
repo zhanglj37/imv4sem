@@ -16,7 +16,7 @@
 #' print(summary_imvsem)
 #'
 #' @export
-summary.imvsem <- function(object, ...) {
+summary_imvsem <- function(object, ...) {
   # Ensure input is a matrix or data frame
   if (!is.matrix(object) && !is.data.frame(object)) {
     stop("Input must be a matrix or data frame.")

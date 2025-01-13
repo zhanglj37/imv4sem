@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot4imv.R
 \name{plot4imv}
 \alias{plot4imv}
-\title{Plot Item-Level IMV with Thresholds and Scale-Level Note}
+\title{Plot Item-Level IMV and Scale-Level Note}
 \usage{
 plot4imv(imvres)
 }
@@ -10,7 +10,7 @@ plot4imv(imvres)
 \item{imvres}{Matrix or vector. Output from the `imvsem` or `imv_baseline` function.}
 }
 \value{
-A ggplot object showing the item-level IMV bar chart with thresholds.
+A ggplot object showing the item-level IMV bar chart.
 }
 \description{
 This function calculates the average IMV across all folds and creates a bar chart
